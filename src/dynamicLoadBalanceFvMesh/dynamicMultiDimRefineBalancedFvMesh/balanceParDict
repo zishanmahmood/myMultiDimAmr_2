@@ -21,9 +21,9 @@ method          ptscotch;
 
 constraints
 {
-    refinementHistory
+    refinementHistoryMultiDim
     {
-        type    refinementHistory;
+        type    refinementHistoryMultiDim;
     }
 }
 // ************************************************************************* //

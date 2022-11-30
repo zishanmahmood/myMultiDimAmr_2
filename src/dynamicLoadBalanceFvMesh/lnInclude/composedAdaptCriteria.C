@@ -1,1 +1,0 @@
-../adaptCriteria/composedAdaptCriteria/composedAdaptCriteria.C

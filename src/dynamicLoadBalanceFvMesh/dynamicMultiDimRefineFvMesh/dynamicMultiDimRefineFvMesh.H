@@ -74,8 +74,11 @@ SourceFiles
 
 #include "dynamicFvMesh.H"
 #include "hexRef.H"
+#include "PackedBoolList.H"
+#include "Switch.H"
 #include "bitSet.H"
-#include "adaptCriteria.H"
+
+#include "multiCritRefinement.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -95,37 +98,43 @@ protected:
         //- Mesh cutting engine
         autoPtr<hexRef> meshCutter_;
 
+        //- Dump cellLevel for postprocessing
+        Switch dumpLevel_;
+
         //- Fluxes to map
         HashTable<word> correctFluxes_;
 
-        //- Protected cells (usually since not hexes)
-        bitSet protectedCell_;
+        //- SurfaceFiels to map
+        HashTable<word> mapSurfaceFields_;
 
         //- Number of refinement/unrefinement steps done so far.
         label nRefinementIterations_;
 
-        //- Dump cellLevel for post-processing
-        bool dumpLevel_;
+        //- Protected cells (usually since not hexes)
+        PackedBoolList protectedCell_;
 
-        //- adaptCriteria
-        autoPtr<adaptCriteria> adaptCriteriaPtr_;
+         //- handles the multi criterion refinment logic
+        multiCritRefinement multiCritRefinement_;
 
 
     // Protected Member Functions
 
+    //- Count set/unset elements in packedlist.
+        static label count(const PackedBoolList&, const unsigned int);
+
         //- Calculate cells that cannot be refined since would trigger
         //  refinement of protectedCell_ (since 2:1 refinement cascade)
-        void calculateProtectedCells(bitSet& unrefineableCell) const;
+        void calculateProtectedCells(PackedBoolList& unrefineableCell) const;
 
         //- Read the projection parameters from dictionary
         void readDict();
 
 
         //- Refine cells. Update mesh and fields.
-        virtual autoPtr<mapPolyMesh> refine(const labelList&);
+        autoPtr<mapPolyMesh> refine(const labelList&);
 
         //- Unrefine cells. Gets passed in centre points of cells to combine.
-        virtual autoPtr<mapPolyMesh> unrefine(const labelList&);
+        autoPtr<mapPolyMesh> unrefine(const labelList&);
 
 
         // Selection of cells to un/refine
@@ -161,7 +170,7 @@ protected:
                 const scalar lowerRefineLevel,
                 const scalar upperRefineLevel,
                 const scalarField& vFld,
-                bitSet& candidateCell
+                PackedBoolList& candidateCell
             ) const;
 
             //- Subset candidate cells for refinement
@@ -169,48 +178,35 @@ protected:
             (
                 const label maxCells,
                 const label maxRefinement,
-                const bitSet& candidateCell
+                const PackedBoolList& candidateCell
             ) const;
 
-            // //- Select points that can be unrefined.
-            // virtual labelList selectUnrefinePoints
-            // (
-            //     const scalar unrefineLevel,
-            //     const bitSet& markedCell,
-            //     const scalarField& pFld
-            // ) const;
+// YO- This is here only to preserve compatibility with the official release.
+//     It is not used by the refinement procedure, but some utilities such as
+//     decomposePar rely on it.
+            //- Select points that can be unrefined.
+            virtual labelList selectUnrefinePoints
+            (
+                const scalar unrefineLevel,
+                const PackedBoolList& markedCell,
+                const scalarField& pFld
+            ) const;
+// YO
 
             //- Extend markedCell with cell-face-cell.
-            void extendMarkedCells(bitSet& markedCell) const;
+            void extendMarkedCells(PackedBoolList& markedCell) const;
 
             //- Check all cells have 8 anchor points
-            void checkEightAnchorPoints(bitSet& protectedCell) const;
-
-            //- Map single non-flux surface<Type>Field
-            //  for new internal faces (e.g. AMR refine). This currently
-            //  interpolates values from surrounding faces (faces on
-            //  neighbouring cells) that do have a value.
-            template <class T>
-            void mapNewInternalFaces
+            void checkEightAnchorPoints
             (
-                const labelList& faceMap,
-                GeometricField<T, fvsPatchField, surfaceMesh>&
-            );
+                PackedBoolList& protectedCell,
+                label& nProtected
+            ) const;
 
-            //- Correct surface fields for new faces
+            //- map non-flux surface<Type>Fields 
+            // for new internal faces (AMR refine)
             template <class T>
             void mapNewInternalFaces(const labelList& faceMap);
-
-            //- Correct surface fields for new faces. Converts any oriented
-            //  fields into non-oriented (i.e. phi -> Uf) before mapping
-            template <class T>
-            void mapNewInternalFaces
-            (
-                const surfaceVectorField& Sf,
-                const surfaceScalarField& magSf,
-                const labelList& faceMap
-            );
-
 
 private:
 
@@ -245,22 +241,19 @@ public:
         }
 
         //- Cells which should not be refined/unrefined
-        const bitSet& protectedCell() const
+        const PackedBoolList& protectedCell() const
         {
             return protectedCell_;
         }
 
         //- Cells which should not be refined/unrefined
-        bitSet& protectedCell()
+        PackedBoolList& protectedCell()
         {
             return protectedCell_;
         }
 
         //- Update the mesh for both mesh motion and topology change
         virtual bool update();
-
-        //- Map all fields in time using given map.
-        virtual void mapFields(const mapPolyMesh& mpm);
 
 
     // Writing
@@ -273,17 +266,13 @@ public:
             IOstream::compressionType cmp,
             const bool valid
         ) const;
+
 };
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#ifdef NoRepository
-    #include "dynamicMultiDimRefineFvMeshTemplates.C"
-#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

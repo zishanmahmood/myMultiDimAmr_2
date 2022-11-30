@@ -208,8 +208,9 @@ public:
 
             labelList selectUnrefineElems
             (
+                const scalar unrefineLevel,
                 const PackedBoolList& markedCell,
-                const bitSet& unrefinePoint
+                const scalarField& vFld
             ) const;
 
             void calcFaceToSplitPoint

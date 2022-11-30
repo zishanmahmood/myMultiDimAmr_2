@@ -1856,8 +1856,9 @@ Foam::labelListList Foam::hexRef4::setRefinement
 
 Foam::labelList Foam::hexRef4::selectUnrefineElems
 (
+    const scalar unrefineLevel,
     const PackedBoolList& markedCell,
-    const bitSet& unrefinePoint
+    const scalarField& pFld
 ) const
 {
     // All points that can be unrefined
@@ -1877,7 +1878,7 @@ Foam::labelList Foam::hexRef4::selectUnrefineElems
 
             bool hasMarked = true;
 
-            if (unrefinePoint.test(pointi))
+            if (pFld[pointi] < unrefineLevel)
             {
                 // Check that all cells are not marked
                 const labelList& pCells = mesh_.pointCells()[pointi];

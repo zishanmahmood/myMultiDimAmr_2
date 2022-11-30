@@ -2306,8 +2306,9 @@ Foam::labelList Foam::hexRef3D::getSplitElems() const
 
 Foam::labelList Foam::hexRef3D::selectUnrefineElems
 (
+    const scalar unrefineLevel,
     const PackedBoolList& markedCell,
-    const bitSet& unrefinePoint
+    const scalarField& pFld
 ) const
 {
     // All points that can be unrefined
@@ -2319,7 +2320,7 @@ Foam::labelList Foam::hexRef3D::selectUnrefineElems
     {
         label pointi = splitPoints[i];
 
-        if (unrefinePoint.test(pointi))
+         if (pFld[pointi] < unrefineLevel)
         {
             // Check that all cells are not marked
             const labelList& pCells = mesh_.pointCells()[pointi];

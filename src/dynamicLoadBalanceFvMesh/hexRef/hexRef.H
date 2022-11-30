@@ -632,8 +632,9 @@ public:
 
             virtual labelList selectUnrefineElems
             (
+                const scalar unrefineLevel,
                 const PackedBoolList& markedCell,
-                const bitSet& unrefinePoint
+                const scalarField& vFld
             ) const = 0;
 
             virtual void calcFaceToSplitPoint

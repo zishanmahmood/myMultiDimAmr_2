@@ -1,1 +1,0 @@
-../adaptCriteria/geometric/geometric.H

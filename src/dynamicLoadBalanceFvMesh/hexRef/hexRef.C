@@ -21,6 +21,25 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
+    Class
+    Foam::hexRef
+
+Description
+    Refinement of (split) hexes using polyTopoChange.
+    hexRef8.H has been abstracted to fit hexRef4 and hexRef4Axi 
+
+SourceFiles
+    hexRef.C
+
+Authors
+    Yun Ouedraogo 2018
+
+    Formerly hexRef8 adapted in 2018 by: 
+    Daniel Rettenmaier <rettenmaier@tu-darmstadt.de>
+    Daniel Deising <deising@mma.tu-darmstadt.de>
+    Changes: 
+        + Corrected adressing of refined internal faces
+
 \*---------------------------------------------------------------------------*/
 
 #include "hexRef.H"
